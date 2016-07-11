@@ -1,0 +1,15 @@
+# OS X Finder
+.DS_Store
+
+# Folders
+tmp/
+.cache/
+*.dSYM/
+
+# Binary Files
+*.o
+*.a
+*.so
+*.out
+*.bin
+
