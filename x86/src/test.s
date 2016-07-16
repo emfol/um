@@ -10,23 +10,22 @@ main:
 
     pushl %ebp
     movl %esp, %ebp
-    subl $4, %esp        # -4(%ebp) = exit status
-    andl $-16, %esp      # align stack
 
-    movl $0, -4(%ebp)    # default exit status
-
-    movl 4(%ebp), %eax   # load %eax with argc
+    movl 8(%ebp), %eax   # load %eax with argc
     cmpl $2, %eax
     jl 1f
 
-    pushl 12(%ebp)
+    # prepare to call um_strlen
+
+    movl 12(%ebp), %eax
+    pushl 4(%eax)
     call um_strlen
     addl $4, %esp
-    movl %eax, -4(%ebp)  # update exit status
+    jmp 2f
 
   1:
-    pushl -4(%ebp)
-    call um_exit
-    addl $4, %esp
-
-    hlt                  # segmentation fault! :-)
+    movl $0, %eax
+  2:
+    movl %ebp, %esp
+    popl %ebp
+    ret

@@ -2,13 +2,18 @@
 ARCH := $(shell uname -m)
 OS   := $(shell uname -s)
 
-BINARIES := bin/*.o bin/*.a bin/*.so
+SRCDIR   := src
+BINDIR   := bin
+BINARIES := $(BINDIR)/*.o $(BINDIR)/*.a $(BINDIR)/*.so
 
 AS      := as
 AS_ARGS :=
 
 LD      := ld
 LD_ARGS :=
+
+AR      := ar
+AR_ARGS := crs
 
 ifeq ($(OS),Linux)
 

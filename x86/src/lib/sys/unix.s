@@ -4,8 +4,8 @@
 
     .text
 
-    .globl um_exit
-um_exit:
+    .globl exit
+exit:
     movl $1, %eax
     int $0x80
-    ret                 # should never be exected...
+    ret                 # this point should never be reached...
