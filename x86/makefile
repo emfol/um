@@ -6,7 +6,7 @@ ifeq ($(OS),Linux)
 
   AS_ARGS := -march=i386 $(AS_ARGS)
 
-  ifeq ($(ARC),x86_64)
+  ifeq ($(ARCH),x86_64)
     AS_ARGS := --32 $(AS_ARGS)
     LD_ARGS := -m elf_i386 $(LD_ARGS)
   endif

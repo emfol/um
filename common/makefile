@@ -18,8 +18,7 @@ ifeq ($(OS),Linux)
 
 endif
 
-.PHONY: clean
-
 clean:
 	rm -f $(BINARIES) > /dev/null 2>&1
 
+.PHONY: clean
