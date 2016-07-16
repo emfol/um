@@ -9,12 +9,12 @@
 um_strlen:
     movl 4(%esp), %eax
     movl %eax, %ecx
-  .Lum_strlen_loop:
+  1:
     cmpb $0, (%eax)
-    je .Lum_strlen_exit
+    je 2f
     incl %eax
-    jmp .Lum_strlen_loop
-  .Lum_strlen_exit:
+    jmp 1b
+  2:
     subl %ecx, %eax
     ret
 
