@@ -19,7 +19,7 @@ ifeq ($(OS),Linux)
 
 else ifeq ($(OS),Darwin)
 
-  LIB_OS := src/lib/os/unix.s
+  LIBOS_S := src/lib/os/unix.s
   AS_ARGS := -arch i386
 
 endif
