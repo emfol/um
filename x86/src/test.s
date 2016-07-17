@@ -26,6 +26,5 @@ main:
   1:
     movl $0, %eax
   2:
-    movl %ebp, %esp
-    popl %ebp
+    leave
     ret

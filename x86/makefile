@@ -40,11 +40,16 @@ $(LIBSYS_OBJ): $(LIBSYS_SRC)
 	$(AS) $(AS_ARGS) -o $(word 1, $(LIBSYS_OBJ)) $(word 1, $(LIBSYS_SRC))
 	$(AS) $(AS_ARGS) -o $(word 2, $(LIBSYS_OBJ)) $(word 2, $(LIBSYS_SRC))
 
-bin/test: bin/test.o bin/string.o $(LIBSYS_ARCHIVE)
+test: $(BINDIR)/test
+	$< 'abcd efgh'; test $$? -eq 9 && echo 'OK!' || echo 'Oops!'
+
+$(BINDIR)/test: $(BINDIR)/test.o $(BINDIR)/string.o $(LIBSYS_ARCHIVE)
 	$(LD) $(LD_ARGS) -e start $+ -o $@
 
-bin/test.o: src/test.s
+$(BINDIR)/test.o: $(SRCDIR)/test.s
 	$(AS) $(AS_ARGS) -o $@ $<
 
-bin/string.o: src/lib/string.s
+$(BINDIR)/string.o: $(LIBDIR)/string.s
 	$(AS) $(AS_ARGS) -o $@ $<
+
+.PHONY: $(LIBSYS_NAME) test
