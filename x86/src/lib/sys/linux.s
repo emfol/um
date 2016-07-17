@@ -7,7 +7,14 @@
     .globl write
     .globl read
 
+    .globl EINTR
+    .globl EAGAIN
+
+    .equ EINTR, 4
+    .equ EAGAIN, 11
+
     .data
+
 errno:
     .long 0
 
