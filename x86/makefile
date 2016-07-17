@@ -1,6 +1,6 @@
 include ../common/makefile
 
-BINARIES := $(BINARIES) $(BINDIR)/test
+BINARIES := $(BINARIES) $(BINDIR)/test $(BINDIR)/actr
 
 LIBDIR := $(SRCDIR)/lib
 SYSDIR := $(LIBDIR)/sys
@@ -47,6 +47,13 @@ $(BINDIR)/test: $(BINDIR)/test.o $(BINDIR)/string.o $(LIBSYS_ARCHIVE)
 	$(LD) $(LD_ARGS) -e start $+ -o $@
 
 $(BINDIR)/test.o: $(SRCDIR)/test.s
+	$(AS) $(AS_ARGS) -o $@ $<
+
+actr: $(BINDIR)/actr
+$(BINDIR)/actr: $(BINDIR)/actr.o $(BINDIR)/string.o $(LIBSYS_ARCHIVE)
+	$(LD) $(LD_ARGS) -e start $+ -o $@
+
+$(BINDIR)/actr.o: $(SRCDIR)/actr.s
 	$(AS) $(AS_ARGS) -o $@ $<
 
 $(BINDIR)/string.o: $(LIBDIR)/string.s
