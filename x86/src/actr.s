@@ -22,7 +22,7 @@
 main:
     pushl %ebp
     movl %esp, %ebp
-    subl $8, %esp            # -4(%ebp) = case mode
+    subl $8, %esp            # -4(%ebp) = case mode (0 = L, 1 = U)
                              # -8(%ebp) = read count
 
     movl 8(%ebp), %eax
@@ -114,5 +114,51 @@ main:
 
 
 .L_convert_case:
-    nop
+    pushl %ebp
+    movl %esp, %ebp
+    pushl %ebx
+
+    movl $0, %ecx            # initial index
+    movl 16(%ebp), %edx      # limit
+    movl 12(%ebp), %ebx      # base address
+    movb $0x20, %ah          # ASCII mask
+
+    cmpl $0, 8(%ebp)
+    jz 3f
+
+    # to upper...
+    notb %ah
+  1:
+    cmpl %ecx, %edx
+    jle 5f
+    movb (%ebx,%ecx,1), %al
+    cmpb $'a', %al
+    jl 2f
+    cmpb $'z', %al
+    jg 2f
+    andb %ah, %al
+    movb %al, (%ebx,%ecx,1)
+  2:
+    incl %ecx
+    jmp 1b
+
+  3:
+    # to lower...
+    cmpl %ecx, %edx
+    jle 5f
+    movb (%ebx,%ecx,1), %al
+    cmpb $'A', %al
+    jl 4f
+    cmpb $'Z', %al
+    jg 4f
+    orb %ah, %al
+    movb %al, (%ebx,%ecx,1)
+  4:
+    incl %ecx
+    jmp 3b
+
+  5:
+    movl %ecx, %eax
+    popl %ebx
+    leave
     ret
