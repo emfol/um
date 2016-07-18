@@ -25,11 +25,11 @@ exit:
     int $0x80
     ret                      # this point should never be reached...
 
-write:
-    movl $4, %eax            # sys_write = 4
-    jmp 1f
 read:
     movl $3, %eax            # sys_read = 3
+    jmp 1f
+write:
+    movl $4, %eax            # sys_write = 4
   1:
     pushl %ebp
     movl %esp, %ebp
@@ -40,6 +40,7 @@ read:
     int $0x80
     cmpl $0, %eax
     jge 2f
+    # %eax < 0
     negl %eax
     movl %eax, errno
     movl $-1, %eax

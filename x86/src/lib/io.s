@@ -42,7 +42,7 @@ um_fwrite:
   1:
     pushl -4(%ebp)
     pushl -8(%ebp)
-    pushl 8(%ebp)
+    pushl 8(%ebp)            # file descriptor...
     call write
     addl $12, %esp
     cmpl $0, %eax

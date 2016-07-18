@@ -28,6 +28,9 @@ AS_ARGS := $(strip $(AS_ARGS))
 LD_ARGS := $(strip $(LD_ARGS))
 AR_ARGS := $(strip $(AR_ARGS))
 
+LIBUM_NAME     := libum
+LIBUM_ARCHIVE  := $(BINDIR)/$(LIBUM_NAME).a
+
 LIBSYS_NAME    := libsys
 LIBSYS_ARCHIVE := $(BINDIR)/$(LIBSYS_NAME).a
 LIBSYS_SRC     := $(SYSDIR)/crt.s $(SYSDIR)/$(LIBSYS_API).s
@@ -43,20 +46,27 @@ $(LIBSYS_OBJ): $(LIBSYS_SRC)
 test: $(BINDIR)/test
 	$< 'abcd efgh'; test $$? -eq 9 && echo 'OK!' || echo 'Oops!'
 
-$(BINDIR)/test: $(BINDIR)/test.o $(BINDIR)/string.o $(LIBSYS_ARCHIVE)
+$(BINDIR)/test: $(BINDIR)/test.o $(LIBUM_ARCHIVE) $(LIBSYS_ARCHIVE)
 	$(LD) $(LD_ARGS) -e start $+ -o $@
 
 $(BINDIR)/test.o: $(SRCDIR)/test.s
 	$(AS) $(AS_ARGS) -o $@ $<
 
 actr: $(BINDIR)/actr
-$(BINDIR)/actr: $(BINDIR)/actr.o $(BINDIR)/string.o $(LIBSYS_ARCHIVE)
+$(BINDIR)/actr: $(BINDIR)/actr.o $(LIBUM_ARCHIVE) $(LIBSYS_ARCHIVE)
 	$(LD) $(LD_ARGS) -e start $+ -o $@
 
 $(BINDIR)/actr.o: $(SRCDIR)/actr.s
 	$(AS) $(AS_ARGS) -o $@ $<
 
+$(LIBUM_NAME): $(LIBUM_ARCHIVE)
+$(LIBUM_ARCHIVE): $(BINDIR)/string.o $(BINDIR)/io.o
+	$(AR) $(AR_ARGS) $@ $?
+
 $(BINDIR)/string.o: $(LIBDIR)/string.s
+	$(AS) $(AS_ARGS) -o $@ $<
+
+$(BINDIR)/io.o: $(LIBDIR)/io.s
 	$(AS) $(AS_ARGS) -o $@ $<
 
 .PHONY: $(LIBSYS_NAME) test
