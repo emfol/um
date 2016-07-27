@@ -43,6 +43,10 @@ $(LIBSYS_OBJ): $(LIBSYS_SRC)
 	$(AS) $(AS_ARGS) -o $(word 1, $(LIBSYS_OBJ)) $(word 1, $(LIBSYS_SRC))
 	$(AS) $(AS_ARGS) -o $(word 2, $(LIBSYS_OBJ)) $(word 2, $(LIBSYS_SRC))
 
+CPUINFO_NAME := cpuinfo
+CPUINFO_SRC  := $(SRCDIR)/$(CPUINFO_NAME).s
+CPUINFO_OBJ  := $(addprefix $(BINDIR)/, $(notdir $(CPUINFO_SRC:.s=.o)))
+
 test: $(BINDIR)/test
 	$< 'abcd efgh'; test $$? -eq 9 && echo 'OK!' || echo 'Oops!'
 
@@ -69,4 +73,10 @@ $(BINDIR)/string.o: $(LIBDIR)/string.s
 $(BINDIR)/io.o: $(LIBDIR)/io.s
 	$(AS) $(AS_ARGS) -o $@ $<
 
-.PHONY: $(LIBSYS_NAME) test
+$(CPUINFO_NAME): $(BINDIR)/$(CPUINFO_NAME)
+$(BINDIR)/$(CPUINFO_NAME): $(CPUINFO_OBJ) $(LIBUM_ARCHIVE) $(LIBSYS_ARCHIVE)
+	$(LD) $(LD_ARGS) -e start $+ -o $@
+$(CPUINFO_OBJ): $(CPUINFO_SRC)
+	$(AS) $(AS_ARGS) -o $@ $<
+
+.PHONY: $(LIBSYS_NAME) $(LIBUM_NAME) test actr $(CPUINFO_NAME)
