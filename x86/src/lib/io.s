@@ -5,6 +5,12 @@
 
     .globl um_fread
     .globl um_fwrite
+    .globl um_println
+
+    .bss
+
+    .equ l_bufsz_println, 1024
+    .lcomm l_buf_println, l_bufsz_println
 
     .text
 
@@ -68,3 +74,39 @@ um_fwrite:
   3:
     leave
     ret
+
+
+um_println:
+    pushl %ebp
+    movl %esp, %ebp
+    pushl %esi
+    pushl %edi
+    subl $4, %esp            # reserve space for %ecx (amount of bytes read) and %edx (buffer size)
+
+    # initialization
+    movl $0, %ecx
+    movl $l_bufsz_println, %edx
+    movl 8(%ebp), %esi
+    movl $l_buf_println, %edi
+
+    cmpl %ecx, %edx
+
+    movb (%esi,%ecx,1), %al
+    cmpb $0, %al
+    jne 1f
+    movb $'\n', %al
+  1:
+    movb %al, (%edi,%ecx,1)
+
+    movl %ecx, -4(%ebp)
+    movl %edx, -8(%ebp)
+    pushl %ecx
+    pushl %edi
+    pushl $1
+
+    addl $4, %esp
+    popl %edi
+    popl %esi
+    leave
+    ret
+

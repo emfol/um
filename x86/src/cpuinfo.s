@@ -6,6 +6,11 @@
 
     .globl main
 
+    .data
+
+l_string_cpuidnotsupported:
+    .string "This CPU does not support CPUID instruction...\n"
+
     .text
 
 # This function returns 1 if CPU supports CPUID instruction and 0 otherwise...
@@ -36,6 +41,9 @@ main:
     subl $128, %esp          # reserve 16 dwords
 
     call cpuid_supported     # %eax has the result
+    cmpl $0, %eax
+    jnz 1f
+  1:
 
     leave
     ret
