@@ -4,8 +4,8 @@
 
     .globl errno
     .globl exit
-    .globl write
     .globl read
+    .globl write
 
     .globl EINTR
     .globl EAGAIN
