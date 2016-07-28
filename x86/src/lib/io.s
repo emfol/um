@@ -5,12 +5,12 @@
 
     .globl um_fread
     .globl um_fwrite
-    .globl um_println
+    .globl um_puts
 
     .bss
 
-    .equ l_bufsz_println, 1024
-    .lcomm l_buf_println, l_bufsz_println
+    .equ l_um_puts_bufsz, 256
+    .lcomm l_um_puts_buf, l_um_puts_bufsz
 
     .text
 
@@ -76,37 +76,84 @@ um_fwrite:
     ret
 
 
-um_println:
+um_puts:
+
     pushl %ebp
     movl %esp, %ebp
-    pushl %esi
-    pushl %edi
-    subl $4, %esp            # reserve space for %ecx (amount of bytes read) and %edx (buffer size)
+    subl $20, %esp # 5 dwords
+    ## alloc space for locals
+    # buffer_base   -4(%ebp)  { %edx }
+    # buffer_limit  -8(%ebp)  { %ebx }
+    # source_base   -12(%ebp) { %ecx }
+    # context       -16(%ebp) { %al: char_read, %ah: end_of_input }
+    # flush_count   -20(%ebp)
+    ## alloc space for buffer
+    movl %esp, -8(%ebp) # buffer_limit
+    subl $256, %esp     # 64 dwords (keep the stack dword aligned)
+    movl %esp, -4(%ebp) # buffer_base
+    # save registers as per C calling convetion
+    pushl %ebx
 
     # initialization
-    movl $0, %ecx
-    movl $l_bufsz_println, %edx
-    movl 8(%ebp), %esi
-    movl $l_buf_println, %edi
+    movl 8(%ebp), %ecx # save source buffer address (first argument)
+    movl %ecx, -12(%ebp)
+    movl -4(%ebp), %edx
+    movl -8(%ebp), %ebx
+    movl $0, %eax
+    movl %eax, -16(%ebp)
+    movl %eax, -20(%ebp)
 
-    cmpl %ecx, %edx
-
-    movb (%esi,%ecx,1), %al
-    cmpb $0, %al
-    jne 1f
-    movb $'\n', %al
   1:
-    movb %al, (%edi,%ecx,1)
-
-    movl %ecx, -4(%ebp)
-    movl %edx, -8(%ebp)
-    pushl %ecx
-    pushl %edi
+    cmpl %edx, %ebx
+    jbe 3f # flush
+    movb (%ecx), %al
+    incl %ecx
+    cmpb $0, %al
+    jne 2f
+    movb $'\n', %al
+    movb $1, %ah
+  2:
+    movb %al, (%edx)
+    incl %edx
+    cmpb $0, %ah
+    je 1b
+  3: # flush
+    # save registers
+    movl %ecx, -12(%ebp)
+    movl %edx, -16(%ebp)
+    movl %ebx, -20(%ebp)
+    movl %eax, -24(%eax)
+    # call um_fwrite
+    subl -4(%ebp), %edx      # subtract base address to get byte count
+    jz EXIT                  # playing safe...
+    pushl %edx
+    pushl -4(%ebp)
     pushl $1
+    call um_fwrite
+    addl $12, %esp
+    cmpl $0, %eax
+    jl EXIT
+    movl -12(%ebp), %ecx
 
-    addl $4, %esp
-    popl %edi
-    popl %esi
+do {
+    while ( addr_dst <= addr_dst_last ) {
+        char_read = *addr_src;
+        if ( char_read == 0 ) {
+            end_of_input = 1;
+            char_read = '\n';
+        }
+        *addr_dst = char_read;
+        if ( end_of_input == 1 )
+            break;
+        addr_src++;
+        addr_dst++;
+    }
+    flush();
+} while ( end_of_input == 0 );
+
+
+    # clean up
+    popl %ebx
     leave
     ret
 
