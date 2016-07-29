@@ -1,6 +1,6 @@
 include ../common/makefile
 
-BINARIES := $(BINARIES) $(BINDIR)/test $(BINDIR)/actr
+BINARIES := $(BINARIES) $(BINDIR)/test/*.o $(BINDIR)/actr
 
 LIBDIR := $(SRCDIR)/lib
 SYSDIR := $(LIBDIR)/sys
@@ -47,15 +47,6 @@ CPUINFO_NAME := cpuinfo
 CPUINFO_SRC  := $(SRCDIR)/$(CPUINFO_NAME).s
 CPUINFO_OBJ  := $(addprefix $(BINDIR)/, $(notdir $(CPUINFO_SRC:.s=.o)))
 
-test: $(BINDIR)/test
-	$< 'abcd efgh'; test $$? -eq 9 && echo 'OK!' || echo 'Oops!'
-
-$(BINDIR)/test: $(BINDIR)/test.o $(LIBUM_ARCHIVE) $(LIBSYS_ARCHIVE)
-	$(LD) $(LD_ARGS) -e start $+ -o $@
-
-$(BINDIR)/test.o: $(SRCDIR)/test.s
-	$(AS) $(AS_ARGS) -o $@ $<
-
 actr: $(BINDIR)/actr
 $(BINDIR)/actr: $(BINDIR)/actr.o $(LIBUM_ARCHIVE) $(LIBSYS_ARCHIVE)
 	$(LD) $(LD_ARGS) -e start $+ -o $@
@@ -73,10 +64,27 @@ $(BINDIR)/string.o: $(LIBDIR)/string.s
 $(BINDIR)/io.o: $(LIBDIR)/io.s
 	$(AS) $(AS_ARGS) -o $@ $<
 
+
 $(CPUINFO_NAME): $(BINDIR)/$(CPUINFO_NAME)
 $(BINDIR)/$(CPUINFO_NAME): $(CPUINFO_OBJ) $(LIBUM_ARCHIVE) $(LIBSYS_ARCHIVE)
 	$(LD) $(LD_ARGS) -e start $+ -o $@
 $(CPUINFO_OBJ): $(CPUINFO_SRC)
 	$(AS) $(AS_ARGS) -o $@ $<
+
+TEST_SRCDIR  := $(SRCDIR)/test
+TEST_BINDIR  := $(BINDIR)/test
+TEST_SOURCES := $(wildcard $(TEST_SRCDIR)/*.s)
+TEST_OBJECTS := $(patsubst $(TEST_SRCDIR)/%.s,$(TEST_BINDIR)/%.o,$(TEST_SOURCES))
+TEST_TARGETS := $(patsubst $(TEST_SRCDIR)/%.s,$(BINDIR)/test_%,$(TEST_SOURCES))
+TEST_CASES   := $(patsubst $(TEST_SRCDIR)/%.s,test_%,$(TEST_SOURCES))
+
+$(TEST_OBJECTS): $(TEST_BINDIR)/%.o: $(TEST_SRCDIR)/%.s
+	$(AS) $(AS_ARGS) -o $@ $<
+
+$(TEST_TARGETS): $(BINDIR)/test_%: $(TEST_BINDIR)/%.o $(LIBUM_ARCHIVE) $(LIBSYS_ARCHIVE)
+	$(LD) $(LD_ARGS) -e start $+ -o $@
+
+$(TEST_CASES): test_%: $(BINDIR)/test_%
+	$< >> test.log 2>&1; echo "Result: $$?"
 
 .PHONY: $(LIBSYS_NAME) $(LIBUM_NAME) test actr $(CPUINFO_NAME)
