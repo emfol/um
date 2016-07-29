@@ -1,6 +1,6 @@
 include ../common/makefile
 
-BINARIES := $(BINARIES) $(BINDIR)/test/*.o $(BINDIR)/actr
+BINARIES := $(BINARIES) $(BINDIR)/actr
 
 LIBDIR := $(SRCDIR)/lib
 SYSDIR := $(LIBDIR)/sys
@@ -70,13 +70,16 @@ $(BINDIR)/$(CPUINFO_NAME): $(CPUINFO_OBJ) $(LIBUM_ARCHIVE) $(LIBSYS_ARCHIVE)
 	$(LD) $(LD_ARGS) -e start $+ -o $@
 $(CPUINFO_OBJ): $(CPUINFO_SRC)
 	$(AS) $(AS_ARGS) -o $@ $<
+BINARIES := $(BINARIES) $(BINDIR)/cpuinfo
 
+TEST_LOGS    := tests.log
 TEST_SRCDIR  := $(SRCDIR)/test
 TEST_BINDIR  := $(BINDIR)/test
 TEST_SOURCES := $(wildcard $(TEST_SRCDIR)/*.s)
 TEST_OBJECTS := $(patsubst $(TEST_SRCDIR)/%.s,$(TEST_BINDIR)/%.o,$(TEST_SOURCES))
 TEST_TARGETS := $(patsubst $(TEST_SRCDIR)/%.s,$(BINDIR)/test_%,$(TEST_SOURCES))
 TEST_CASES   := $(patsubst $(TEST_SRCDIR)/%.s,test_%,$(TEST_SOURCES))
+BINARIES := $(BINARIES) $(BINDIR)/test/*.o $(BINDIR)/test_*
 
 $(TEST_OBJECTS): $(TEST_BINDIR)/%.o: $(TEST_SRCDIR)/%.s
 	$(AS) $(AS_ARGS) -o $@ $<
@@ -85,6 +88,6 @@ $(TEST_TARGETS): $(BINDIR)/test_%: $(TEST_BINDIR)/%.o $(LIBUM_ARCHIVE) $(LIBSYS_
 	$(LD) $(LD_ARGS) -e start $+ -o $@
 
 $(TEST_CASES): test_%: $(BINDIR)/test_%
-	$< >> test.log 2>&1; echo "Result: $$?"
+	$< >> $(TEST_LOGS) 2>&1; echo "Result: $$?"
 
 .PHONY: $(LIBSYS_NAME) $(LIBUM_NAME) test actr $(CPUINFO_NAME)
