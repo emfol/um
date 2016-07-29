@@ -80,6 +80,7 @@ um_puts:
 
     pushl %ebp
     movl %esp, %ebp
+
     subl $20, %esp # 5 dwords
     ## alloc space for locals
     # buffer_base   -4(%ebp)  { %edx }
@@ -91,11 +92,12 @@ um_puts:
     movl %esp, -8(%ebp) # buffer_limit
     subl $256, %esp     # 64 dwords (keep the stack dword aligned)
     movl %esp, -4(%ebp) # buffer_base
+
     # save registers as per C calling convetion
     pushl %ebx
 
     # initialization
-    movl 8(%ebp), %ecx # save source buffer address (first argument)
+    movl 8(%ebp), %ecx  # save source buffer address (first argument)
     movl %ecx, -12(%ebp)
     movl -4(%ebp), %edx
     movl -8(%ebp), %ebx
@@ -105,7 +107,7 @@ um_puts:
 
   1:
     cmpl %edx, %ebx
-    jbe 3f # flush
+    jbe 3f
     movb (%ecx), %al
     incl %ecx
     cmpb $0, %al
@@ -117,12 +119,11 @@ um_puts:
     incl %edx
     cmpb $0, %ah
     je 1b
-  3: # flush
+
+  3:
     # save registers
     movl %ecx, -12(%ebp)
-    movl %edx, -16(%ebp)
-    movl %ebx, -20(%ebp)
-    movl %eax, -24(%eax)
+    movl %eax, -16(%ebp)
     # call um_fwrite
     subl -4(%ebp), %edx      # subtract base address to get byte count
     jz EXIT                  # playing safe...
@@ -133,7 +134,10 @@ um_puts:
     addl $12, %esp
     cmpl $0, %eax
     jl EXIT
+    movl -16(%ebp), %eax
     movl -12(%ebp), %ecx
+    movl -4(%ebp), %edx
+    movl -8(%ebp), %abx
 
 do {
     while ( addr_dst <= addr_dst_last ) {
