@@ -33,15 +33,14 @@ LIBUM_ARCHIVE  := $(BINDIR)/$(LIBUM_NAME).a
 
 LIBSYS_NAME    := libsys
 LIBSYS_ARCHIVE := $(BINDIR)/$(LIBSYS_NAME).a
-LIBSYS_SRC     := $(SYSDIR)/crt.s $(SYSDIR)/$(LIBSYS_API).s
-LIBSYS_OBJ     := $(addprefix $(BINDIR)/sys_, $(notdir $(LIBSYS_SRC:.s=.o)))
+LIBSYS_SRC     := $(wildcard $(SRCDIR)/lib/sys/*.s) $(wildcard $(SRCDIR)/lib/sys/$(LIBSYS_API)/*.s)
+LIBSYS_OBJ     := $(patsubst $(SRCDIR)/%.s,$(BINDIR)/%.o,$(LIBSYS_SRC))
 
-$(LIBSYS_NAME): $(LIBSYS_ARCHIVE)
+$(LIBSYS_OBJ): $(BINDIR)/%.o : $(SRCDIR)/%.s
+	$(AS) $(AS_ARGS) -o $@ $<
 $(LIBSYS_ARCHIVE): $(LIBSYS_OBJ)
 	$(AR) $(AR_ARGS) $@ $?
-$(LIBSYS_OBJ): $(LIBSYS_SRC)
-	$(AS) $(AS_ARGS) -o $(word 1, $(LIBSYS_OBJ)) $(word 1, $(LIBSYS_SRC))
-	$(AS) $(AS_ARGS) -o $(word 2, $(LIBSYS_OBJ)) $(word 2, $(LIBSYS_SRC))
+$(LIBSYS_NAME): $(LIBSYS_ARCHIVE)
 
 CPUINFO_NAME := cpuinfo
 CPUINFO_SRC  := $(SRCDIR)/$(CPUINFO_NAME).s
