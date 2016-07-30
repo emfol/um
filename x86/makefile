@@ -90,4 +90,10 @@ $(TEST_TARGETS): $(BINDIR)/test_%: $(TEST_BINDIR)/%.o $(LIBUM_ARCHIVE) $(LIBSYS_
 $(TEST_CASES): test_%: $(BINDIR)/test_%
 	$< >> $(TEST_LOGS) 2>&1; echo "Result: $$?"
 
+# Static Pattern Rules Example
+# oops.2 goops.2 doops.2: %.2: %.1
+# 	echo 'Making: $@ ( $+ )'
+# oops.1 goops.1 doops.1:
+# 	echo 'Making: $@'
+
 .PHONY: $(LIBSYS_NAME) $(LIBUM_NAME) test actr $(CPUINFO_NAME)
