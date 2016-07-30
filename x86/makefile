@@ -43,9 +43,9 @@ $(LIBSYS_NAME): $(LIBSYS_ARCHIVE)
 
 LIBUM_NAME    := libum
 LIBUM_ARCHIVE := $(BINDIR)/$(LIBUM_NAME).a
-LIBUM_SRC     := $(wildcard $(SRCDIR)/lib/*.s)
+LIBUM_SRC     := $(wildcard $(SRCDIR)/lib/um/*.s)
 LIBUM_OBJ     := $(patsubst $(SRCDIR)/%.s,$(BINDIR)/%.o,$(LIBUM_SRC))
-BINARIES      := $(BINARIES) $(BINDIR)/lib/*.o
+BINARIES      := $(BINARIES) $(BINDIR)/lib/um/*.o
 
 $(LIBUM_OBJ): $(BINDIR)/%.o : $(SRCDIR)/%.s
 	$(AS) $(AS_ARGS) -o $@ $<
