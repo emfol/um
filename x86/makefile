@@ -31,9 +31,12 @@ LIBSYS_NAME    := libsys
 LIBSYS_ARCHIVE := $(BINDIR)/$(LIBSYS_NAME).a
 LIBSYS_SRC     := $(wildcard $(SRCDIR)/lib/sys/*.s) $(wildcard $(SRCDIR)/lib/sys/$(LIBSYS_API)/*.s)
 LIBSYS_OBJ     := $(patsubst $(SRCDIR)/%.s,$(BINDIR)/%.o,$(LIBSYS_SRC))
-BINARIES       := $(BINARIES) $(BINDIR)/lib/sys/*.o $(BINDIR)/lib/sys/{linux,unix}/*.o
+LIBSYS_DIR     := $(BINDIR)/lib/sys/$(LIBSYS_API)
+BINARIES       := $(BINARIES) $(BINDIR)/lib/sys/*.o $(BINDIR)/lib/sys/$(LIBSYS_API)/*.o
 
-$(LIBSYS_OBJ): $(BINDIR)/%.o : $(SRCDIR)/%.s
+$(LIBSYS_DIR):
+	mkdir -p $@
+$(LIBSYS_OBJ): $(BINDIR)/%.o : $(SRCDIR)/%.s $(LIBSYS_DIR)
 	$(AS) $(AS_ARGS) -o $@ $<
 $(LIBSYS_ARCHIVE): $(LIBSYS_OBJ)
 	$(AR) $(AR_ARGS) $@ $?
@@ -45,9 +48,12 @@ LIBUM_NAME    := libum
 LIBUM_ARCHIVE := $(BINDIR)/$(LIBUM_NAME).a
 LIBUM_SRC     := $(wildcard $(SRCDIR)/lib/um/*.s)
 LIBUM_OBJ     := $(patsubst $(SRCDIR)/%.s,$(BINDIR)/%.o,$(LIBUM_SRC))
+LIBUM_DIR     := $(BINDIR)/lib/um
 BINARIES      := $(BINARIES) $(BINDIR)/lib/um/*.o
 
-$(LIBUM_OBJ): $(BINDIR)/%.o : $(SRCDIR)/%.s
+$(LIBUM_DIR):
+	mkdir -p $@
+$(LIBUM_OBJ): $(BINDIR)/%.o : $(SRCDIR)/%.s $(LIBUM_DIR)
 	$(AS) $(AS_ARGS) -o $@ $<
 $(LIBUM_ARCHIVE): $(LIBUM_OBJ)
 	$(AR) $(AR_ARGS) $@ $?
@@ -80,9 +86,12 @@ TEST_SRC := $(wildcard $(SRCDIR)/test/*.s)
 TEST_OBJ := $(patsubst $(SRCDIR)/%.s,$(BINDIR)/%.o,$(TEST_SRC))
 TEST_BIN := $(patsubst $(SRCDIR)/test/%.s,$(BINDIR)/test_%,$(TEST_SRC))
 TEST_CMD := $(subst $(BINDIR)/,,$(TEST_BIN))
+TEST_DIR := $(BINDIR)/test
 BINARIES := $(BINARIES) $(BINDIR)/test/*.o $(BINDIR)/test_*
 
-$(TEST_OBJ): $(BINDIR)/%.o: $(SRCDIR)/%.s
+$(TEST_DIR):
+	mkdir -p $@
+$(TEST_OBJ): $(BINDIR)/%.o: $(SRCDIR)/%.s $(TEST_DIR)
 	$(AS) $(AS_ARGS) -o $@ $<
 $(TEST_BIN): $(BINDIR)/test_%: $(BINDIR)/test/%.o $(LIBUM_ARCHIVE) $(LIBSYS_ARCHIVE)
 	$(LD) $(LD_ARGS) -e start $+ -o $@
