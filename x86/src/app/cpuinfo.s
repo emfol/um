@@ -16,7 +16,8 @@ l_string_cpuidnotsupported:
     .text
 
 # This function returns 1 if CPU supports CPUID instruction and 0 otherwise...
-cpuid_supported:
+# int is_cpuid_supported( void );
+is_cpuid_supported:
     pushl %ebp
     movl %esp, %ebp
     subl $4, %esp
@@ -37,6 +38,118 @@ cpuid_supported:
     leave
     ret
 
+
+# int get_cpuid_vendor( char *buf, int size );
+get_cpuid_vendor:
+
+    pushl %ebp
+    movl %esp, %ebp
+
+    # save %ebx
+    pushl %ebx
+
+    movl 12(%ebp), %ecx
+    cmpl $16, %ecx
+    jge 1f
+
+    # %ecx < 16
+    movl $0, %eax
+    jmp 2f
+
+  1:
+    # execute cpuid...
+    movl $0, %eax
+    cpuid
+    movl 8(%ebp), %eax
+    movl %ebx, (%eax)
+    movl %edx, 4(%eax)
+    movl %ecx, 8(%eax)
+    movl $0, 12(%eax)
+
+    # success return value
+    movl $1, %eax
+
+  2:
+    # restore %ebx
+    popl %ebx
+
+    leave
+    ret
+
+
+# int get_cpuid_brand( char *buf, int size );
+get_cpuid_brand:
+
+    pushl %ebp
+    movl %esp, %ebp
+    subl $12, %esp # 3 dwords
+    # -4(%ebp)  = max cpuid
+    # -8(%ebp)  = last cpuid
+    # -12(%ebp) = last buffer address
+
+    # preserve registers
+    pushl %ebx
+    pushl %edi
+
+    movl 12(%ebp), %ecx
+    cmpl $52, %ecx
+    jge 1f
+
+    # %ecx < 52
+    movl $1, %edx
+    movl $0, %eax
+    jmp 3f
+
+  1:
+    movl $0x80000000, %eax
+    cpuid
+    cmpl $0x80000000, %eax
+    ja 1f
+
+    # extended cpuid not supported...
+    movl $2, %edx
+    movl $0, %eax
+    jmp 3f
+
+  1:
+    # prepare for cpuid loop
+    movl 8(%ebp), %eax # save copy of first argument
+    movl %eax, -12(%ebp)
+    movl $0x80000004, %eax # load %eax with max cpuid code
+    movl %eax, -4(%ebp) # ... and store it
+    subl $2, %eax # get first cpuid code
+    movl %eax, -8(%ebp) # ... and store it
+
+  2:
+    # execute cpuid...
+    cpuid # we assume %eax already has the correct value...
+    movl -12(%ebp), %edi
+    movl %eax, (%edi)
+    movl %ebx, 4(%edi)
+    movl %ecx, 8(%edi)
+    movl %edx, 12(%edi)
+    addl $16, %edi
+    movl %edi, -12(%ebp)
+    movl -8(%ebp), %eax
+    incl %eax
+    movl %eax, -8(%ebp)
+    cmpl -4(%ebp), %eax
+    jbe 2b
+    movl $0, (%edi)
+
+    # success return value
+    movl $0, %edx
+    movl $1, %eax
+
+  3:
+    # restore registers
+    popl %edi
+    popl %ebx
+
+    leave
+    ret
+
+
 main:
 
     pushl %ebp
@@ -52,7 +165,7 @@ main:
     # save %ebx
     pushl %ebx
 
-    call cpuid_supported     # %eax has the result
+    call is_cpuid_supported # %eax has the result
     cmpl $0, %eax
     jnz 1f
 
@@ -69,15 +182,45 @@ main:
     addl $4, %esp
 
     # get vendor string...
-    movl $0, %eax
-    cpuid
     movl -4(%ebp), %eax
-    movl %ebx, (%eax)
-    movl %edx, 4(%eax)
-    movl %ecx, 8(%eax)
-    movl $0, 12(%eax)
-    # ... and print it!
+    movl -8(%ebp), %ecx
+    subl %eax, %ecx
+    pushl %ecx
     pushl %eax
+    call get_cpuid_vendor
+    addl $8, %esp
+    cmpl $0, %eax
+    jne 1f
+
+    # %eax = 0 (Error!)
+    movl $2, %eax
+    jmp 4f
+
+  1:
+    # ... and print it!
+    pushl -4(%ebp)
+    call um_puts
+    addl $4, %esp
+
+    # get brand string...
+    movl -4(%ebp), %eax
+    movl -8(%ebp), %ecx
+    subl %eax, %ecx
+    pushl %ecx
+    pushl %eax
+    call get_cpuid_brand
+    addl $8, %esp
+    cmpl $0, %eax
+    jne 1f
+
+    # %eax = 0 (Error!)
+    movl %edx, %eax
+    addl $30, %eax
+    jmp 4f
+
+  1:
+    # ... and print it!
+    pushl -4(%ebp)
     call um_puts
     addl $4, %esp
 
@@ -85,7 +228,6 @@ main:
     movl $0, %eax # status code 0 (success!)
 
   4:
-
     # restore %ebx
     popl %ebx
 
