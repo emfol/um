@@ -8,52 +8,43 @@
 
     .data
 
-.L_usage:
-    .string "Usage:\n    actr [UuLs] < input.txt > output.txt\n"
+l_string_usage:
+    .asciz "Usage:\n    actr [UuLs] < input.txt > output.txt\n"
 
     .bss
 
-    .equ BUFSZ, 4096
-    .lcomm .L_buffer, BUFSZ
+    .equ l_bufsz, 1024
+    .lcomm l_buf, l_bufsz
 
     .text
 
     .globl main
 main:
+
     pushl %ebp
     movl %esp, %ebp
-    subl $8, %esp            # -4(%ebp) = case mode (0 = L, 1 = U)
-                             # -8(%ebp) = read count
+    subl $16, %esp # 4 dwords
+    # -4(%ebp)  = case mode (0 = L, 1 = U)
+    # -8(%ebp)  = read count
+    # -12(%ebp) = EINTR
+    # -16(%ebp) = EAGAIN
 
+    # this reduces reference count...
+    movl $EINTR, -12(%ebp)
+    movl $EAGAIN, -16(%ebp)
+
+    # check amount of arguments passed to the program...
     movl 8(%ebp), %eax
     cmpl $2, %eax
-    jge .L_main_default
+    jge 1f
 
+    # argc < 2
+    call l_print_usage
+    movl $128, %eax
+    jmp 4f
 
-    # print usage message...
-
-  .L_main_print_usage:
-    pushl $.L_usage
-    call um_strlen
-    addl $4, %esp
-    pushl %eax
-    pushl $.L_usage
-    pushl $1                 # STDOUT = 1
-    call um_fwrite
-    addl $12, %esp
-    cmpl $0, %eax
-    jl 1f
-    movl $0, %eax            # 0 = success...
-    jmp .L_main_leave
   1:
-    movl errno, %eax
-    jmp .L_main_leave
-
-
-    # default flow...
-
-
-  .L_main_default:
+    # argc >= 2
     movl 12(%ebp), %eax
     movl 4(%eax), %eax
     movb (%eax), %al
@@ -61,67 +52,99 @@ main:
     cmpb $'l', %al
     jne 1f
     movl $0, -4(%ebp)
-    jmp .L_main_read_loop
+    jmp 2f
   1:
     cmpb $'u', %al
-    jne .L_main_print_usage
+    je 1f
+    call l_print_usage
+    movl $129, %eax
+    jmp 4f
+  1:
     movl $1, -4(%ebp)
 
-  .L_main_read_loop:
-    # read from STDIN
-    pushl $BUFSZ
-    pushl $.L_buffer
-    pushl $0                 # STDIN = 0
+  2:
+    # read loop
+    pushl $l_bufsz
+    pushl $l_buf
+    pushl $0 # STDIN = 0
     call um_fread
     addl $12, %esp
     cmpl $0, %eax
-    jg 2f
+    jg 3f
     jl 1f
     # %eax == 0 (EOF!)
-    # ...also 0 in %eax means: success!
-    jmp .L_main_leave
+    # ... also, 0 in %eax means success!
+    jmp 4f
 
   1:
     # %eax < 0 (Error!)
     movl errno, %eax
-    jmp .L_main_leave
+    # check for EINTR
+    cmpl -12(%ebp), %eax
+    je 2b
+    # check for EAGAIN
+    cmpl -16(%ebp), %eax
+    je 2b
+    jmp 4f
 
-  2:
+  3:
     # %eax > 0 (Work!)
-    movl %eax, -8(%ebp)     # save amount of bytes read...
+    movl %eax, -8(%ebp) # save amount of bytes read...
 
     # convert to upper/lower case
     pushl %eax
-    pushl $.L_buffer
-    pushl -4(%ebp)           # selected case mode...
-    call .L_convert_case
+    pushl $l_buf
+    pushl -4(%ebp) # selected case mode...
+    call l_convert_case
     addl $12, %esp
 
+  1:
     # write to STDOUT
     pushl -8(%ebp)
-    pushl $.L_buffer
-    pushl $1                 # STDOUT = 1
+    pushl $l_buf
+    pushl $1 # STDOUT = 1
     call um_fwrite
     addl $12, %esp
     cmpl $0, %eax
-    jge .L_main_read_loop
-    # %eax < 0
-    movl errno, %eax
+    jge 2b
 
-  .L_main_leave:
+    # %eax < 0 (Error!)
+    movl errno, %eax
+    # check for EINTR
+    cmpl -12(%ebp), %eax
+    je 1b
+    # check for EAGAIN
+    cmpl -16(%ebp), %eax
+    je 1b
+
+  4:
     leave
     ret
 
 
-.L_convert_case:
+l_print_usage:
+
+    pushl %ebp
+    movl %esp, %ebp
+
+    pushl $l_string_usage
+    call um_puts
+    addl $4, %esp
+
+    leave
+    ret
+
+
+l_convert_case:
+
     pushl %ebp
     movl %esp, %ebp
     pushl %ebx
 
-    movl $0, %ecx            # initial index
-    movl 16(%ebp), %edx      # limit
-    movl 12(%ebp), %ebx      # base address
-    movb $0x20, %ah          # ASCII mask
+    movl $0, %ecx       # initial index
+    movl 16(%ebp), %edx # limit
+    movl 12(%ebp), %ebx # base address
+    movb $0x20, %ah     # ASCII mask
 
     cmpl $0, 8(%ebp)
     jz 3f
