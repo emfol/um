@@ -59,26 +59,6 @@ $(LIBUM_ARCHIVE): $(LIBUM_OBJ)
 	$(AR) $(AR_ARGS) $@ $?
 $(LIBUM_NAME): $(LIBUM_ARCHIVE)
 
-# apps
-
-CPUINFO_NAME := cpuinfo
-CPUINFO_SRC  := $(SRCDIR)/$(CPUINFO_NAME).s
-CPUINFO_OBJ  := $(addprefix $(BINDIR)/, $(notdir $(CPUINFO_SRC:.s=.o)))
-
-actr: $(BINDIR)/actr
-$(BINDIR)/actr: $(BINDIR)/actr.o $(LIBUM_ARCHIVE) $(LIBSYS_ARCHIVE)
-	$(LD) $(LD_ARGS) -e start $+ -o $@
-
-$(BINDIR)/actr.o: $(SRCDIR)/actr.s
-	$(AS) $(AS_ARGS) -o $@ $<
-
-$(CPUINFO_NAME): $(BINDIR)/$(CPUINFO_NAME)
-$(BINDIR)/$(CPUINFO_NAME): $(CPUINFO_OBJ) $(LIBUM_ARCHIVE) $(LIBSYS_ARCHIVE)
-	$(LD) $(LD_ARGS) -e start $+ -o $@
-$(CPUINFO_OBJ): $(CPUINFO_SRC)
-	$(AS) $(AS_ARGS) -o $@ $<
-BINARIES := $(BINARIES) $(BINDIR)/cpuinfo
-
 # tests
 
 TEST_LOG := tests.log
@@ -97,6 +77,23 @@ $(TEST_BIN): $(BINDIR)/test_%: $(BINDIR)/test/%.o $(LIBUM_ARCHIVE) $(LIBSYS_ARCH
 	$(LD) $(LD_ARGS) -e start $+ -o $@
 $(TEST_CMD): test_%: $(BINDIR)/test_%
 	$< >> $(TEST_LOG) 2>&1; echo "Result: $$?"
+
+# apps
+
+APP_SRC  := $(wildcard $(SRCDIR)/app/*.s)
+APP_OBJ  := $(patsubst $(SRCDIR)/%.s,$(BINDIR)/%.o,$(APP_SRC))
+APP_BIN  := $(patsubst %.o,%,$(APP_OBJ))
+APP_CMD  := $(subst $(BINDIR)/app/,,$(APP_BIN))
+APP_DIR  := $(BINDIR)/app
+BINARIES := $(BINARIES) $(BINDIR)/app/*
+
+$(APP_DIR):
+	mkdir -p $@
+$(APP_OBJ): $(BINDIR)/%.o : $(SRCDIR)/%.s $(APP_DIR)
+	$(AS) $(AS_ARGS) -o $@ $<
+$(APP_BIN): % : %.o $(LIBUM_ARCHIVE) $(LIBSYS_ARCHIVE)
+	$(LD) $(LD_ARGS) -e start $+ -o $@
+$(APP_CMD): % : $(BINDIR)/app/%
 
 # Static Pattern Rules Example
 # oops.2 goops.2 doops.2: %.2: %.1
