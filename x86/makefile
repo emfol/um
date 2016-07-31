@@ -1,13 +1,11 @@
 include ../common/makefile
 
-BINARIES := $(BINARIES) $(BINDIR)/actr
-
 LD_ARGS := -static $(LD_ARGS)
 
 ifeq ($(OS),Linux)
 
   LIBSYS_API := linux
-  AS_ARGS := -march=i386 $(AS_ARGS)
+  AS_ARGS := -march=i586 $(AS_ARGS)
 
   ifeq ($(ARCH),x86_64)
     AS_ARGS := --32 $(AS_ARGS)
@@ -101,4 +99,4 @@ $(APP_CMD): % : $(BINDIR)/app/%
 # oops.1 goops.1 doops.1:
 # 	echo 'Making: $@'
 
-.PHONY: $(LIBSYS_NAME) $(LIBUM_NAME) test actr $(CPUINFO_NAME)
+.PHONY: $(LIBSYS_NAME) $(LIBUM_NAME)
