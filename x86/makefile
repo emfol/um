@@ -64,18 +64,18 @@ $(LIBUM_NAME): $(LIBUM_ARCHIVE)
 TEST_LOG := tests.log
 TEST_SRC := $(wildcard $(SRCDIR)/test/*.s)
 TEST_OBJ := $(patsubst $(SRCDIR)/%.s,$(BINDIR)/%.o,$(TEST_SRC))
-TEST_BIN := $(patsubst $(SRCDIR)/test/%.s,$(BINDIR)/test_%,$(TEST_SRC))
-TEST_CMD := $(subst $(BINDIR)/,,$(TEST_BIN))
+TEST_BIN := $(patsubst %.o,%,$(TEST_OBJ))
+TEST_CMD := $(subst $(BINDIR)/test/,test_,$(TEST_BIN))
 TEST_DIR := $(BINDIR)/test
-BINARIES := $(BINARIES) $(BINDIR)/test/*.o $(BINDIR)/test_*
+BINARIES := $(BINARIES) $(BINDIR)/test/*
 
 $(TEST_DIR):
 	mkdir -p $@
 $(TEST_OBJ): $(BINDIR)/%.o: $(SRCDIR)/%.s $(TEST_DIR)
 	$(AS) $(AS_ARGS) -o $@ $<
-$(TEST_BIN): $(BINDIR)/test_%: $(BINDIR)/test/%.o $(LIBUM_ARCHIVE) $(LIBSYS_ARCHIVE)
+$(TEST_BIN): %: %.o $(LIBUM_ARCHIVE) $(LIBSYS_ARCHIVE)
 	$(LD) $(LD_ARGS) -e start $+ -o $@
-$(TEST_CMD): test_%: $(BINDIR)/test_%
+$(TEST_CMD): test_%: $(BINDIR)/test/%
 	$< >> $(TEST_LOG) 2>&1; echo "Result: $$?"
 
 # apps
