@@ -31,7 +31,7 @@ string4:
     .ascii "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     .ascii "abcdefghijklmnopqrstuvwxyz0123456789"
     .ascii "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    .byte 0 # 12 * 36 + 1 = 432 + 1 = 433 (4)
+    .byte 0 # 12 * 36 + 1 = 432 + 1 = 433 (5)
 
     .text
 
@@ -118,7 +118,7 @@ main:
     movl $7, %eax
     jmp 2f
   1:
-    cmpl $4, %edx
+    cmpl $5, %edx
     je 1f
     movl $8, %eax
     jmp 2f

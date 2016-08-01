@@ -76,7 +76,7 @@ um_puts:
     # flush count   -24(%ebp)
     # [ alloc space for buffer ]
     movl %esp, -8(%ebp) # buffer limit
-    subl $128, %esp     # 32 dwords (keep the stack dword aligned)
+    subl $96, %esp      # 24 dwords (keep the stack dword aligned)
     movl %esp, -4(%ebp) # buffer base
 
     # save registers as per C calling convetion
