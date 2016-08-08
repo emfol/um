@@ -3,9 +3,13 @@
  * @description compilation of string utility functions for x86 plataform
  */
 
+    .globl um_strlen
+    .globl um_strcmp
+    .globl um_itoa
+
     .text
 
-    .globl um_strlen
+# unsigned int um_strlen( const char *buf );
 um_strlen:
     movl 4(%esp), %eax
     movl %eax, %ecx
@@ -19,9 +23,19 @@ um_strlen:
     ret
 
 
-# char *um_itoa( int num, char *buf, int base );
-um_itoa:
+# int um_strcmp( const char *a, const char *b );
+um_strcmp:
+    pushl %ebp
+    movl %esp, %ebp
 
+    movl $0, %eax
+
+    leave
+    ret
+
+
+# int um_itoa( int num, char *buf, int base );
+um_itoa:
     pushl %ebp
     movl %esp, %ebp
 
@@ -35,7 +49,9 @@ um_itoa:
     jmp 3f
 
   2:
-    movl 12(%ebp), %eax
+    movl $0, %eax
+    movl 12(%ebp), %ecx
+    movb %al, (%ecx)
 
   3:
     leave
