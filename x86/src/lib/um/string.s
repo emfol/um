@@ -28,7 +28,20 @@ um_strcmp:
     pushl %ebp
     movl %esp, %ebp
 
-    movl $0, %eax
+    movl 8(%ebp), %ecx
+    movl 12(%ebp), %edx
+  1:
+    movb (%ecx), %al
+    movb (%edx), %ah
+    subb %ah, %al
+    jne 2f
+    cmpb $0, %ah
+    je 2f
+    incl %ecx
+    incl %edx
+    jmp 1b
+  2:
+    movsx %al, %eax
 
     leave
     ret
