@@ -41,7 +41,7 @@ um_strcmp:
     incl %edx
     jmp 1b
   2:
-    movsx %al, %eax
+    movsbl %al, %eax
 
     leave
     ret
