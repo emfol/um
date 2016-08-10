@@ -29,12 +29,10 @@ LIBSYS_NAME    := libsys
 LIBSYS_ARCHIVE := $(BINDIR)/$(LIBSYS_NAME).a
 LIBSYS_SRC     := $(wildcard $(SRCDIR)/lib/sys/*.s) $(wildcard $(SRCDIR)/lib/sys/$(LIBSYS_API)/*.s)
 LIBSYS_OBJ     := $(patsubst $(SRCDIR)/%.s,$(BINDIR)/%.o,$(LIBSYS_SRC))
-LIBSYS_DIR     := $(BINDIR)/lib/sys/$(LIBSYS_API)
 BINARIES       := $(BINARIES) $(BINDIR)/lib/sys/*.o $(BINDIR)/lib/sys/$(LIBSYS_API)/*.o
 
-$(LIBSYS_DIR):
-	mkdir -p $@
-$(LIBSYS_OBJ): $(BINDIR)/%.o : $(SRCDIR)/%.s $(LIBSYS_DIR)
+$(LIBSYS_OBJ): $(BINDIR)/%.o : $(SRCDIR)/%.s
+	mkdir -p $(dir $@)
 	$(AS) $(AS_ARGS) -o $@ $<
 $(LIBSYS_ARCHIVE): $(LIBSYS_OBJ)
 	$(AR) $(AR_ARGS) $@ $?
@@ -46,12 +44,10 @@ LIBUM_NAME    := libum
 LIBUM_ARCHIVE := $(BINDIR)/$(LIBUM_NAME).a
 LIBUM_SRC     := $(wildcard $(SRCDIR)/lib/um/*.s)
 LIBUM_OBJ     := $(patsubst $(SRCDIR)/%.s,$(BINDIR)/%.o,$(LIBUM_SRC))
-LIBUM_DIR     := $(BINDIR)/lib/um
 BINARIES      := $(BINARIES) $(BINDIR)/lib/um/*.o
 
-$(LIBUM_DIR):
-	mkdir -p $@
-$(LIBUM_OBJ): $(BINDIR)/%.o : $(SRCDIR)/%.s $(LIBUM_DIR)
+$(LIBUM_OBJ): $(BINDIR)/%.o : $(SRCDIR)/%.s
+	mkdir -p $(dir $@)
 	$(AS) $(AS_ARGS) -o $@ $<
 $(LIBUM_ARCHIVE): $(LIBUM_OBJ)
 	$(AR) $(AR_ARGS) $@ $?
@@ -64,12 +60,10 @@ TEST_SRC := $(wildcard $(SRCDIR)/test/*.s)
 TEST_OBJ := $(patsubst $(SRCDIR)/%.s,$(BINDIR)/%.o,$(TEST_SRC))
 TEST_BIN := $(patsubst %.o,%,$(TEST_OBJ))
 TEST_CMD := $(subst $(BINDIR)/test/,test_,$(TEST_BIN))
-TEST_DIR := $(BINDIR)/test
 BINARIES := $(BINARIES) $(BINDIR)/test/*
 
-$(TEST_DIR):
-	mkdir -p $@
-$(TEST_OBJ): $(BINDIR)/%.o: $(SRCDIR)/%.s $(TEST_DIR)
+$(TEST_OBJ): $(BINDIR)/%.o: $(SRCDIR)/%.s
+	mkdir -p $(dir $@)
 	$(AS) $(AS_ARGS) -o $@ $<
 $(TEST_BIN): %: %.o $(LIBUM_ARCHIVE) $(LIBSYS_ARCHIVE)
 	$(LD) $(LD_ARGS) -e start $+ -o $@
@@ -82,12 +76,10 @@ APP_SRC  := $(wildcard $(SRCDIR)/app/*.s)
 APP_OBJ  := $(patsubst $(SRCDIR)/%.s,$(BINDIR)/%.o,$(APP_SRC))
 APP_BIN  := $(patsubst %.o,%,$(APP_OBJ))
 APP_CMD  := $(subst $(BINDIR)/app/,,$(APP_BIN))
-APP_DIR  := $(BINDIR)/app
 BINARIES := $(BINARIES) $(BINDIR)/app/*
 
-$(APP_DIR):
-	mkdir -p $@
-$(APP_OBJ): $(BINDIR)/%.o : $(SRCDIR)/%.s $(APP_DIR)
+$(APP_OBJ): $(BINDIR)/%.o : $(SRCDIR)/%.s
+	mkdir -p $(dir $@)
 	$(AS) $(AS_ARGS) -o $@ $<
 $(APP_BIN): % : %.o $(LIBUM_ARCHIVE) $(LIBSYS_ARCHIVE)
 	$(LD) $(LD_ARGS) -e start $+ -o $@
