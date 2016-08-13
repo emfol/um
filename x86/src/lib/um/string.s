@@ -61,13 +61,17 @@ um_itoa:
     cmpl $36, %eax
     jle 2f
   1:
-    movl $0, %eax
+    # invalid base...
+    # ... terminate string and return -1.
+    movl 12(%ebp), %eax
+    movb $0, (%eax)
+    movl $-1, %eax
     jmp 3f
 
   2:
+    movl 12(%ebp), %eax
+    movb $0, (%eax)
     movl $0, %eax
-    movl 12(%ebp), %ecx
-    movb %al, (%ecx)
 
   3:
     leave
