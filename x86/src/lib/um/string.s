@@ -31,18 +31,21 @@ um_strcmp:
     movl 8(%ebp), %ecx
     movl 12(%ebp), %edx
   1:
-    movb (%ecx), %al
-    movb (%edx), %ah
-    subb %ah, %al
+    movb (%ecx), %ah
+    movb (%edx), %al
+    subb %al, %ah
     jne 2f
-    cmpb $0, %ah
+    cmpb $0, %al
     je 2f
     incl %ecx
     incl %edx
     jmp 1b
   2:
-    movsbl %al, %eax
+    movzbl %ah, %eax
+    jnc 3f
+    subl $0x100, %eax
 
+  3:
     leave
     ret
 
