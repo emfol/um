@@ -32,6 +32,8 @@ string4:
     .ascii "abcdefghijklmnopqrstuvwxyz0123456789"
     .ascii "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     .byte 0 # 12 * 36 + 1 = 432 + 1 = 433 (5)
+string5:
+    .asciz "" # 0 + 1 = 1 (1)
 
     .text
 
@@ -128,17 +130,39 @@ main:
     movl $24, %eax
     jmp 2f
 
+    # string5
   1:
-    popl %ebx
-    cmpl -4(%ebp), %ebx
+    movl $0xDEADBEEF, %ebx
+    pushl $string5
+    call um_puts
+    addl $4, %esp
+    cmpl $1, %eax
+    je 1f
+    movl $9, %eax
+    jmp 2f
+  1:
+    cmpl $1, %edx
+    je 1f
+    movl $10, %eax
+    jmp 2f
+  1:
+    cmpl $0xDEADBEEF, %ebx
     je 1f
     movl $25, %eax
+    jmp 2f
+
+  1:
+    movl (%esp), %ebx
+    cmpl -4(%ebp), %ebx
+    je 1f
+    movl $26, %eax
     jmp 2f
 
   1:
     movl $0, %eax
 
   2:
+    popl %ebx
     leave
     ret
 
