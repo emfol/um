@@ -61,21 +61,29 @@ main:
 
     pushl %ebp
     movl %esp, %ebp
-    subl $16, %esp # 4 dwords for locals
+    subl $24, %esp # 6 dwords for locals
     # reserve 12 dwords (48 bytes) for buffer
     subl $48, %esp
     movl %esp, -4(%ebp)
     # save registers
     pushl %ebx
+    pushl %esi
+    pushl %edi
 
     # -4(%ebp) : buffer
     # -8(%ebp) : test_array
     # -12(%ebp): count
     # -16(%ebp): %ebx marker
+    # -20(%ebp): %esi marker
+    # -24(%ebp): %edi marker
 
     # initialization
     movl $0xDEADBEEF, %ebx
     movl %ebx, -16(%ebp)
+    movl $0x12345678, %esi
+    movl %esi, -20(%ebp)
+    movl $0x87654321, %edi
+    movl %edi, -24(%ebp)
     movl $0, %eax
     movl %eax, -12(%ebp)
     movl $test_array, %eax
@@ -156,8 +164,12 @@ main:
 
     # increment test count
     incl -12(%ebp)
-    # check if %ebx has been preserved...
+    # check if %ebx, %esi and %edi have been preserved...
     cmpl -16(%ebp), %ebx
+    jne 2f
+    cmpl -20(%ebp), %esi
+    jne 2f
+    cmpl -24(%ebp), %edi
     jne 2f
     # next...
     movl -8(%ebp), %eax
@@ -174,6 +186,8 @@ main:
   4:
     movl -12(%ebp), %eax
 
+    popl %edi
+    popl %esi
     popl %ebx
     leave
     ret

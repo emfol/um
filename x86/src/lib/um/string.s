@@ -55,13 +55,12 @@ um_itoa:
     pushl %ebp
     movl %esp, %ebp
 
-    # check value for base...
+    # check supplied base...
     movl 16(%ebp), %eax
     cmpl $2, %eax
     jl 1f # invalid base...
     cmpl $36, %eax
     jle 2f # valid base...
-    # ... else, invalid base
 
   1:
     # invalid base...
@@ -69,49 +68,100 @@ um_itoa:
     movl 12(%ebp), %eax
     movb $0, (%eax)
     movl $-1, %eax
-    jmp EXIT
+    jmp 7f
 
   2:
     # valid base...
+    # ... preserve registers and initialize buffer pointers
+    pushl %ebx
+    pushl %esi
+    pushl %edi
+    movl 12(%ebp), %ebx
+    movl %ebx, %esi
+    movl %ebx, %edi
+
     # ... check if base is a power of 2
     bsfl %eax, %ecx
     bsrl %eax, %edx
     cmpl %ecx, %edx
-    je POW2
-    jne NON_POW2
-
-  POW2:
-    pushl %ebx
-    movl 12(%ebp), %ebx
     movl 8(%ebp), %edx
-    movb %cl, %ch
-    decb %ch # bitmask ( bitindex - 1 )
-    xorl %eax, %eax
-  POW2_LOOP:
+    jne 4f
+
+    # algorithm for powers of 2
+    movb %al, %ch
+    decb %ch # mask = base - 1
+  3:
     movb %ch, %al
     andl %edx, %eax
     cmpb $10, %al
     jl 2f
-    addb $'A', %al
-    jmp 3f
+    addb $7, %al
   2:
-    addb $'0', %al
-  3:
+    addb $48, %al
+    movb %al, (%ebx)
+    incl %ebx
+    shrl %cl, %edx
+    jnz 3b
+  2:
+    movb $0, (%ebx)
+    leal -1(%ebx), %edi
+    jmp 6f
+
+  4:
+    # algorithm for non powers of 2
+    cmpl $10, %eax
+    jne 2f
+    # if base 10, add minus sign for negative numbers...
+    test %edx, %edx
+    jns 2f
+    # ... number is negative
+    negl %edx
+    movb $'-', (%ebx)
+    incl %ebx
+    movl %ebx, %esi
+  2:
+    movl %eax, %ecx # copy base to %ecx
+    movl %edx, %eax # copy number to %eax
+  5:
+    # divide loop
+    cdq
+    divl %ecx
+    xchgl %edx, %eax
+    cmpb $10, %al
+    jl 2f
+    addb $7, %al
+  2:
+    addb $48, %al
     movb %al, (%ebx)
     incl %ebx
     cmpl $0, %edx
     je 2f
-    shrl %cl, %edx
-    jmp POW2_LOOP
+    xchgl %edx, %eax
+    jmp 5b
   2:
     movb $0, (%ebx)
+    leal -1(%ebx), %edi
 
+  6:
+    # reverse loop
+    cmpl %esi, %edi
+    jbe 2f
+    movb (%esi), %al
+    movb (%edi), %ah
+    movb %al, (%edi)
+    movb %ah, (%esi)
+    incl %esi
+    decl %edi
+    jmp 6b
+  2:
+    # calculate return value (amount of digits written)
+    subl 12(%ebp), %ebx
+    movl %ebx, %eax
+    # restore saved registers
+    popl %edi
+    popl %esi
+    popl %ebx
 
-  NON_POW2:
-    movl 12(%ebp), %eax
-    movb $0, (%eax)
-    movl $0, %eax
-
-  EXIT:
+  7:
     leave
     ret
