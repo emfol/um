@@ -20,10 +20,26 @@ success:
 
 str_empty:
     .byte 0
+str_s1234_10:
+    .ascii "-"
 str_1234_10:
     .asciz "1234"
 str_s1048576_10:
-    .asciz "-1048576"
+    .ascii "-"
+str_1048576_10:
+    .asciz "1048576"
+str_1048576_16:
+    .asciz "100000"
+str_1048576_20:
+    .asciz "6B18G"
+str_1048576_36:
+    .asciz "MH34"
+str_s1073741824_10:
+    .ascii "-"
+str_1073741824_10:
+    .asciz "1073741824"
+str_s1073741824_16:
+    .asciz "C0000000"
 str_DEADBEEF_2:
     .asciz "11011110101011011011111011101111"
 str_DEADBEEF_16:
@@ -32,6 +48,10 @@ str_777_8:
     .asciz "777"
 str_644_8:
     .asciz "644"
+str_1012010_36:
+    .asciz "LOVE"
+
+.balign 16, 0
 
 test_array:
     # struct test {
@@ -40,15 +60,24 @@ test_array:
     #   int len;   # base + 8
     #   char *str; # base + 12
     # };
-    .long 1,  0,          -1, str_empty
-    .long 37, 0,          -1, str_empty
-    .long 80, 0,          -1, str_empty
-    .long 10, 1234,       4,  str_1234_10
-    .long 10, -1048576,   8,  str_s1048576_10
-    .long 2,  0xDEADBEEF, 32, str_DEADBEEF_2
-    .long 16, 0xDEADBEEF, 8,  str_DEADBEEF_16
-    .long 8,  0777,       3,  str_777_8
-    .long 8,  0644,       3,  str_644_8
+    .long 1,  0,           -1, str_empty
+    .long 37, 0,           -1, str_empty
+    .long 80, 0,           -1, str_empty
+    .long 10, 1234,        4,  str_1234_10
+    .long 10, -1234,       5,  str_s1234_10
+    .long 10, -1048576,    8,  str_s1048576_10
+    .long 10, 1048576,     7,  str_1048576_10
+    .long 16, 1048576,     6,  str_1048576_16
+    .long 20, 1048576,     5,  str_1048576_20
+    .long 36, 1048576,     4,  str_1048576_36
+    .long 10, -1073741824, 11, str_s1073741824_10
+    .long 16, -1073741824, 8,  str_s1073741824_16
+    .long 10, 1073741824,  10, str_1073741824_10
+    .long 2,  0xDEADBEEF,  32, str_DEADBEEF_2
+    .long 16, 0xDEADBEEF,  8,  str_DEADBEEF_16
+    .long 8,  0777,        3,  str_777_8
+    .long 8,  0644,        3,  str_644_8
+    .long 36, 1012010,     4,  str_1012010_36
 
     # end marker
     .long 0, 0, 0, 0

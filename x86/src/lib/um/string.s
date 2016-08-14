@@ -124,7 +124,7 @@ um_itoa:
     movl %edx, %eax # copy number to %eax
   5:
     # divide loop
-    cdq
+    cltd
     divl %ecx
     xchgl %edx, %eax
     cmpb $10, %al
