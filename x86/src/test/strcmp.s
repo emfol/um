@@ -42,7 +42,12 @@ str_5:
 str_6:
     .ascii "abcdefghijklmnopqrstuvwxyz"
     .asciz "0123456789"
+str_7:
+    .byte 255, 0
+str_8:
+    .byte 0
 
+.balign 16, 0
 
 test_array:
     # struct test {
@@ -68,6 +73,8 @@ test_array:
     .long 240,  str_5, str_4
     .long 0,    str_0, str_6
     .long 0,    str_6, str_0
+    .long 255,  str_7, str_8
+    .long -255, str_8, str_7
 
     # end marker
     .long 0, 0, 0
