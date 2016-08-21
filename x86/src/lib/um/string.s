@@ -6,6 +6,8 @@
     .globl um_strlen
     .globl um_strcmp
     .globl um_itoa
+    .globl um_strcp
+    .globl um_strf
 
     .text
 
@@ -161,5 +163,46 @@ um_itoa:
     popl %ebx
 
   7:
+    leave
+    ret
+
+
+# unsigned long um_strcp( char *buf, const char *src );
+# ... returns the size of the copied string
+um_strcp:
+    pushl %ebp
+    movl %esp, %ebp
+    pushl %esi
+    pushl %edi
+
+    # prepare for loop
+    movl 12(%ebp), %esi
+    movl 8(%ebp), %edi
+    movl %edi, %ecx
+    cld
+  1:
+    # copy loop
+    lodsb
+    stosb
+    cmpb $0, %al
+    jne 1b
+    # calc length of copied string
+    subl %ecx, %edi
+    leal -1(%edi), %eax
+
+    popl %edi
+    popl %esi
+    leave
+    ret
+
+
+# unsigned long um_strf( char *buf, const char *fmt, ... );
+# ... This function applies a format and returns the size of resulting string
+um_strf:
+    pushl %ebp
+    movl %esp, %ebp
+    movl 8(%ebp), %eax
+    movb $0, (%eax)
+    xorl %eax, %eax
     leave
     ret
