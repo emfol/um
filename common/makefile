@@ -2,10 +2,9 @@
 ARCH := $(shell uname -m)
 OS   := $(shell uname -s)
 
-SRCDIR   := src
-BINDIR   := bin
-BINARIES := $(BINDIR)/*.o $(BINDIR)/*.a $(BINDIR)/*.so
-GARBAGE  := *.log
+SRCDIR := src
+BINDIR := bin
+TEMP   := *.log
 
 AS      := as
 AS_ARGS :=
@@ -25,6 +24,6 @@ ifeq ($(OS),Linux)
 endif
 
 clean:
-	rm -f $(GARBAGE) $(BINARIES) > /dev/null 2>&1
+	rm -rf $(TEMP) $(BINDIR) > /dev/null 2>&1
 
 .PHONY: clean
