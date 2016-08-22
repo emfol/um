@@ -13,15 +13,20 @@
 
 # unsigned int um_strlen( const char *buf );
 um_strlen:
-    movl 4(%esp), %eax
-    movl %eax, %ecx
+    pushl %ebp
+    movl %esp, %ebp
+    pushl %edi
+    movl 8(%ebp), %edi
+    movl $0, %ecx
+    movb $0, %al
+    cld
   1:
-    cmpb $0, (%eax)
-    je 2f
-    incl %eax
-    jmp 1b
-  2:
+    scasb
+    loopne 1b
+    movl $-1, %eax
     subl %ecx, %eax
+    popl %edi
+    leave
     ret
 
 
