@@ -17,14 +17,13 @@ um_strlen:
     movl %esp, %ebp
     pushl %edi
     movl 8(%ebp), %edi
-    movl $0, %ecx
-    movb $0, %al
+    xorl %eax, %eax
+    leal -1(%eax), %ecx
+    movl %ecx, %edx
     cld
-  1:
-    scasb
-    loopne 1b
-    movl $-1, %eax
-    subl %ecx, %eax
+    repne scasb
+    subl %ecx, %edx
+    leal -1(%edx), %eax
     popl %edi
     leave
     ret
