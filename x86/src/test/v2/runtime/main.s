@@ -50,6 +50,14 @@ main:
     jne 2f
     loop 1b
 
+    # restore %esp
+    addl $32, %esp
+    leal -28(%ebp), %eax
+    cmpl %eax, %esp
+    jne 2f
+    cmpl $CONST_EDI, (%eax)
+    jne 2f
+
     # check if %ebx, %esi and %edi have been preserved...
     cmpl $CONST_EBX, %ebx
     jne 2f
@@ -62,13 +70,16 @@ main:
     cmpl -24(%ebp), %esi
     jne 2f
     cmpl -28(%ebp), %edi
-    jne 2f
-
-    jmp 3f
+    je 3f
   2:
     orl $128, -4(%ebp)
   3:
     movl -4(%ebp), %eax
+
+    # (try to) restore registers
+    movl -8(%ebp), %ebx
+    movl -12(%ebp), %esi
+    movl -16(%ebp), %edi
 
     leave
     ret
